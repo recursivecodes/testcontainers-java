@@ -6,10 +6,19 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
 import org.apache.commons.io.FileUtils;
 import org.bson.Document;
-import org.junit.*;
+import org.junit.Assume;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.rnorth.ducttape.RetryCountExceededException;
 import org.rnorth.ducttape.unreliables.Unreliables;
 import org.testcontainers.containers.Container;
@@ -18,7 +27,13 @@ import org.testcontainers.containers.startupcheck.OneShotStartupCheckStrategy;
 import org.testcontainers.utility.Base58;
 import org.testcontainers.utility.TestEnvironment;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.Socket;
 import java.time.Duration;
 import java.util.Arrays;
@@ -30,7 +45,11 @@ import java.util.regex.Pattern;
 
 import static java.util.Collections.singletonMap;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.rnorth.visibleassertions.VisibleAssertions.*;
+import static org.rnorth.visibleassertions.VisibleAssertions.assertEquals;
+import static org.rnorth.visibleassertions.VisibleAssertions.assertFalse;
+import static org.rnorth.visibleassertions.VisibleAssertions.assertThat;
+import static org.rnorth.visibleassertions.VisibleAssertions.assertThrows;
+import static org.rnorth.visibleassertions.VisibleAssertions.assertTrue;
 import static org.testcontainers.containers.BindMode.READ_ONLY;
 import static org.testcontainers.containers.BindMode.READ_WRITE;
 import static org.testcontainers.containers.SelinuxContext.SHARED;
@@ -61,21 +80,21 @@ public class GenericContainerRuleTest {
      * Redis
      */
     @ClassRule
-    public static GenericContainer redis = new GenericContainer("redis:3.0.2")
+    public static GenericContainer redis = new GenericContainer(org.testcontainers.utility.DockerImageName.of("redis:3.0.2"))
             .withExposedPorts(REDIS_PORT);
 
     /**
      * RabbitMQ
      */
     @ClassRule
-    public static GenericContainer rabbitMq = new GenericContainer("rabbitmq:3.5.3")
+    public static GenericContainer rabbitMq = new GenericContainer(org.testcontainers.utility.DockerImageName.of("rabbitmq:3.5.3"))
             .withExposedPorts(RABBITMQ_PORT);
 
     /**
      * MongoDB
      */
     @ClassRule
-    public static GenericContainer mongo = new GenericContainer("mongo:3.1.5")
+    public static GenericContainer mongo = new GenericContainer(org.testcontainers.utility.DockerImageName.of("mongo:3.1.5"))
             .withExposedPorts(MONGO_PORT);
 
     /**
@@ -83,7 +102,7 @@ public class GenericContainerRuleTest {
      * dirty way for testing.
      */
     @ClassRule
-    public static GenericContainer alpineEnvVar = new GenericContainer<>("alpine:3.2")
+    public static GenericContainer alpineEnvVar = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
             .withExposedPorts(80)
             .withEnv("MAGIC_NUMBER", "4")
             .withEnv("MAGIC_NUMBER", oldValue -> oldValue.orElse("") + "2")
@@ -94,7 +113,7 @@ public class GenericContainerRuleTest {
      * dirty way for testing.
      */
     @ClassRule
-    public static GenericContainer alpineEnvVarFromMap = new GenericContainer("alpine:3.2")
+    public static GenericContainer alpineEnvVarFromMap = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
             .withExposedPorts(80)
             .withEnv(ImmutableMap.of(
                     "FIRST", "42",
@@ -106,7 +125,7 @@ public class GenericContainerRuleTest {
      * Map a file on the classpath to a file in the container, and then expose the content for testing.
      */
     @ClassRule
-    public static GenericContainer alpineClasspathResource = new GenericContainer("alpine:3.2")
+    public static GenericContainer alpineClasspathResource = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
             .withExposedPorts(80)
             .withClasspathResourceMapping("mappable-resource/test-resource.txt", "/content.txt", READ_ONLY)
             .withCommand("/bin/sh", "-c", "while true; do cat /content.txt | nc -l -p 80; done");
@@ -115,7 +134,7 @@ public class GenericContainerRuleTest {
      * Map a file on the classpath to a file in the container, and then expose the content for testing.
      */
     @ClassRule
-    public static GenericContainer alpineClasspathResourceSelinux = new GenericContainer("alpine:3.2")
+    public static GenericContainer alpineClasspathResourceSelinux = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
             .withExposedPorts(80)
             .withClasspathResourceMapping("mappable-resource/test-resource.txt", "/content.txt", READ_WRITE, SHARED)
             .withCommand("/bin/sh", "-c", "while true; do cat /content.txt | nc -l -p 80; done");
@@ -124,7 +143,7 @@ public class GenericContainerRuleTest {
      * Create a container with an extra host entry and expose the content of /etc/hosts for testing.
      */
     @ClassRule
-    public static GenericContainer alpineExtrahost = new GenericContainer("alpine:3.2")
+    public static GenericContainer alpineExtrahost = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
             .withExposedPorts(80)
             .withExtraHost("somehost", "192.168.1.10")
             .withCommand("/bin/sh", "-c", "while true; do cat /etc/hosts | nc -l -p 80; done");
@@ -222,7 +241,7 @@ public class GenericContainerRuleTest {
 
     @Test
     public void customLabelTest() {
-        try (final GenericContainer alpineCustomLabel = new GenericContainer("alpine:3.2")
+        try (final GenericContainer alpineCustomLabel = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
             .withLabel("our.custom", "label")
             .withCommand("top")) {
 
@@ -240,7 +259,7 @@ public class GenericContainerRuleTest {
         assertThrows("When trying to overwrite an 'org.testcontainers' label, withLabel() throws an exception",
             IllegalArgumentException.class,
             () -> {
-                new GenericContainer("alpine:3.2")
+                new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
                     .withLabel("org.testcontainers.foo", "false");
             }
         );
@@ -282,7 +301,7 @@ public class GenericContainerRuleTest {
     public void failFastWhenContainerHaltsImmediately() throws Exception {
 
         long startingTimeMs = System.currentTimeMillis();
-        final GenericContainer failsImmediately = new GenericContainer("alpine:3.2")
+        final GenericContainer failsImmediately = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
               .withCommand("/bin/sh", "-c", "return false")
               .withMinimumRunningDuration(Duration.ofMillis(100));
 
@@ -346,7 +365,7 @@ public class GenericContainerRuleTest {
         // Use random name to avoid the conflicts between the tests
         String randomName = Base58.randomString(5);
         try(
-                GenericContainer container = new GenericContainer<>("redis:3.0.2")
+                GenericContainer container = new GenericContainer(org.testcontainers.utility.DockerImageName.of("redis:3.0.2"))
                         .withCommand("redis-server", "--help")
                         .withCreateContainerCmdModifier(cmd -> cmd.withName("overrideMe"))
                         // Preserves the order

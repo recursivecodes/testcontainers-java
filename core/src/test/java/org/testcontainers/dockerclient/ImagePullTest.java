@@ -34,7 +34,7 @@ public class ImagePullTest {
 
     @Test
     public void test() {
-        try (final GenericContainer container = new GenericContainer<>(image)
+        try (final GenericContainer container = new GenericContainer(org.testcontainers.utility.DockerImageName.of(image))
             .withCommand("/bin/sh", "-c", "sleep 0")
             .withStartupCheckStrategy(new OneShotStartupCheckStrategy())) {
             container.start();

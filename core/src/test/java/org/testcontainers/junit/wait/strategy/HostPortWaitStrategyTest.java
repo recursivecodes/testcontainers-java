@@ -18,7 +18,7 @@ public class HostPortWaitStrategyTest {
     private static final String IMAGE_NAME = "alpine:3.7";
 
     @ClassRule
-    public static GenericContainer container = new GenericContainer(IMAGE_NAME).withExposedPorts()
+    public static GenericContainer container = new GenericContainer(org.testcontainers.utility.DockerImageName.of(IMAGE_NAME)).withExposedPorts()
         .withCommand("sh", "-c", "while true; do nc -lp 8080; done")
         .withExposedPorts(8080)
         .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofSeconds(10)));

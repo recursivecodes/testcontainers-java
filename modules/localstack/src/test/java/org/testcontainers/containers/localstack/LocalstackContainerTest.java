@@ -38,9 +38,9 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.rnorth.visibleassertions.VisibleAssertions.assertEquals;
 import static org.rnorth.visibleassertions.VisibleAssertions.assertThat;
 import static org.rnorth.visibleassertions.VisibleAssertions.assertTrue;
+import static org.testcontainers.containers.localstack.LocalStackContainer.Service.CLOUDWATCHLOGS;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.S3;
 import static org.testcontainers.containers.localstack.LocalStackContainer.Service.SQS;
-import static org.testcontainers.containers.localstack.LocalStackContainer.Service.CLOUDWATCHLOGS;
 
 /**
  * Tests for Localstack Container, used both in bridge network (exposed to host) and docker network modes.
@@ -149,7 +149,7 @@ public class LocalstackContainerTest {
         // }
 
         @ClassRule
-        public static GenericContainer awsCliInDockerNetwork = new GenericContainer<>("atlassian/pipelines-awscli")
+        public static GenericContainer awsCliInDockerNetwork = new GenericContainer(org.testcontainers.utility.DockerImageName.of("atlassian/pipelines-awscli"))
             .withNetwork(network)
             .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("top"))
             .withEnv("AWS_ACCESS_KEY_ID", "accesskey")

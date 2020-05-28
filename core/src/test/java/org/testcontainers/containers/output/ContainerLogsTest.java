@@ -73,13 +73,13 @@ public class ContainerLogsTest {
     }
 
     private static GenericContainer shortLivedContainer() {
-        return new GenericContainer("alpine:3.3")
+        return new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.3"))
             .withCommand("/bin/sh", "-c", "echo -n 'stdout' && echo -n 'stderr' 1>&2")
             .withStartupCheckStrategy(new OneShotStartupCheckStrategy());
     }
 
     private static GenericContainer longRunningContainer() {
-        return new GenericContainer("alpine:3.3")
+        return new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.3"))
             .withCommand("ping -c 100 127.0.0.1");
     }
 }

@@ -10,10 +10,10 @@ import org.testcontainers.utility.TestcontainersConfiguration;
 import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.Collections;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum PortForwardingContainer {
@@ -29,7 +29,7 @@ public enum PortForwardingContainer {
     @SneakyThrows
     private Connection createSSHSession() {
         String password = UUID.randomUUID().toString();
-        container = new GenericContainer<>(TestcontainersConfiguration.getInstance().getSSHdImage())
+        container = new GenericContainer(org.testcontainers.utility.DockerImageName.of(TestcontainersConfiguration.getInstance().getSSHdImage()))
             .withExposedPorts(22)
             .withEnv("PASSWORD", password)
             .withCommand(

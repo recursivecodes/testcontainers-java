@@ -14,7 +14,7 @@ public class MultiplePortsExposedTest {
 
     @Rule
     // rule {
-    public GenericContainer container = new GenericContainer("orientdb:3.0.13")
+    public GenericContainer container = new GenericContainer(org.testcontainers.utility.DockerImageName.of("orientdb:3.0.13"))
         .withExposedPorts(2424, 2480)
         .withLogConsumer(new Slf4jLogConsumer(log));
     // }

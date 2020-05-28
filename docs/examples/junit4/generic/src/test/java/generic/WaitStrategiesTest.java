@@ -13,20 +13,20 @@ public class WaitStrategiesTest {
 
     @Rule
     // waitForNetworkListening {
-    public GenericContainer nginx = new GenericContainer("nginx:1.9.4")
+    public GenericContainer nginx = new GenericContainer(org.testcontainers.utility.DockerImageName.of("nginx:1.9.4"))
         .withExposedPorts(80);
     // }
 
     @Rule
     // waitForSimpleHttp {
-    public GenericContainer nginxWithHttpWait = new GenericContainer("nginx:1.9.4")
+    public GenericContainer nginxWithHttpWait = new GenericContainer(org.testcontainers.utility.DockerImageName.of("nginx:1.9.4"))
         .withExposedPorts(80)
         .waitingFor(Wait.forHttp("/"));
     // }
 
     @Rule
     // logMessageWait {
-    public GenericContainer containerWithLogWait = new GenericContainer("redis:5.0.3")
+    public GenericContainer containerWithLogWait = new GenericContainer(org.testcontainers.utility.DockerImageName.of("redis:5.0.3"))
         .withExposedPorts(6379)
         .waitingFor(
             Wait.forLogMessage(".*Ready to accept connections.*\\n", 1)

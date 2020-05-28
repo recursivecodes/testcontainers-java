@@ -13,7 +13,7 @@ import static org.rnorth.visibleassertions.VisibleAssertions.assertTrue;
 public class WorkingDirectoryTest {
 
     @ClassRule
-    public static GenericContainer container = new GenericContainer("alpine:3.2")
+    public static GenericContainer container = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
             .withWorkingDirectory("/etc")
             .withStartupCheckStrategy(new OneShotStartupCheckStrategy())
             .withCommand("ls", "-al");

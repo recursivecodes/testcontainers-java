@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TestcontainersSharedContainerTests {
 
     @Container
-    private static final GenericContainer GENERIC_CONTAINER = new GenericContainer("httpd:2.4-alpine")
+    private static final GenericContainer GENERIC_CONTAINER = new GenericContainer(org.testcontainers.utility.DockerImageName.of("httpd:2.4-alpine"))
         .withExposedPorts(80);
 
     private static String lastContainerId;

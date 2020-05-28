@@ -99,7 +99,7 @@ public class AuthenticatedImagePullTest {
     @Test
     public void testThatAuthLocatorIsUsedForContainerCreation() {
         // actually start a container, which will require an authenticated pull
-        try (final GenericContainer<?> container = new GenericContainer<>(testImageNameWithTag)
+        try (final GenericContainer<?> container = new GenericContainer(DockerImageName.of(testImageNameWithTag))
             .withCommand("/bin/sh", "-c", "sleep 10")) {
             container.start();
 

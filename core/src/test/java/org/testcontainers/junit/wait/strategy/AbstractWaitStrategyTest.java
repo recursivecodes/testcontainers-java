@@ -67,7 +67,7 @@ public abstract class AbstractWaitStrategyTest<W extends WaitStrategy> {
 
     protected GenericContainer startContainerWithCommand(String shellCommand, WaitStrategy waitStrategy, Integer... ports) {
         // apply WaitStrategy to container
-        return new GenericContainer(IMAGE_NAME)
+        return new GenericContainer(org.testcontainers.utility.DockerImageName.of(IMAGE_NAME))
                 .withExposedPorts(ports)
                 .withCommand("sh", "-c", shellCommand)
                 .waitingFor(waitStrategy.withStartupTimeout(Duration.ofMillis(WAIT_TIMEOUT_MILLIS)));

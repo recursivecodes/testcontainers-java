@@ -54,6 +54,7 @@ import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.lifecycle.TestDescription;
 import org.testcontainers.lifecycle.TestLifecycleAware;
 import org.testcontainers.utility.Base58;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.DockerLoggerFactory;
 import org.testcontainers.utility.DockerMachineClient;
 import org.testcontainers.utility.MountableFile;
@@ -84,6 +85,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -245,14 +247,25 @@ public class GenericContainer<SELF extends GenericContainer<SELF>>
         this(TestcontainersConfiguration.getInstance().getTinyImage());
     }
 
+    public GenericContainer(DockerImageName dockerImageName) {
+        this.image = new RemoteDockerImage(dockerImageName);
+    }
+
+    public GenericContainer(CompletableFuture<DockerImageName> futureDockerImageName) {
+        this.image = new RemoteDockerImage(futureDockerImageName);
+    }
+
+    @Deprecated
     public GenericContainer(@NonNull final String dockerImageName) {
         this.setDockerImageName(dockerImageName);
     }
 
+    @Deprecated
     public GenericContainer(@NonNull final Future<String> image) {
         setImage(image);
     }
 
+    @Deprecated
     public void setImage(Future<String> image) {
         this.image = new RemoteDockerImage(image);
     }

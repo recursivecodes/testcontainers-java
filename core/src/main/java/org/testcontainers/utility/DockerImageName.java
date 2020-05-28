@@ -2,12 +2,15 @@ package org.testcontainers.utility;
 
 
 import com.google.common.net.HostAndPort;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.regex.Pattern;
 
 @EqualsAndHashCode(exclude = "rawName")
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DockerImageName {
 
     /* Regex patterns used for validation */
@@ -21,6 +24,7 @@ public final class DockerImageName {
     private final String repo;
     private final Versioning versioning;
 
+    @Deprecated
     public DockerImageName(String name) {
         this.rawName = name;
         final int slashIndex = name.indexOf('/');
@@ -49,6 +53,7 @@ public final class DockerImageName {
         }
     }
 
+    @Deprecated
     public DockerImageName(String name, String tag) {
         this.rawName = name;
         final int slashIndex = name.indexOf('/');
@@ -72,6 +77,10 @@ public final class DockerImageName {
             repo = remoteName;
             versioning = new TagVersioning(tag);
         }
+    }
+
+    public static DockerImageName of(final String fullImageName) {
+        return new DockerImageName(fullImageName);
     }
 
     /**
@@ -122,6 +131,10 @@ public final class DockerImageName {
 
     public String getRegistry() {
         return registry;
+    }
+
+    public DockerImageName withTag(final String newTag) {
+        return new DockerImageName(rawName, registry, repo, new TagVersioning(newTag));
     }
 
     private interface Versioning {
