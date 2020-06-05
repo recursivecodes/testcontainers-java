@@ -42,10 +42,6 @@ public class RemoteDockerImage extends LazyFuture<String> {
         this.imageNameFuture = CompletableFuture.completedFuture(dockerImageName);
     }
 
-    public RemoteDockerImage(CompletableFuture<DockerImageName> futureDockerImageName) {
-        this.imageNameFuture = futureDockerImageName;
-    }
-
     @Deprecated
     public RemoteDockerImage(String dockerImageName) {
         this.imageNameFuture = CompletableFuture.completedFuture(new DockerImageName(dockerImageName));
@@ -56,7 +52,6 @@ public class RemoteDockerImage extends LazyFuture<String> {
         this.imageNameFuture = CompletableFuture.completedFuture(new DockerImageName(repository, tag));
     }
 
-    @Deprecated
     public RemoteDockerImage(@NonNull Future<String> imageFuture) {
         this.imageNameFuture = Futures.lazyTransform(imageFuture, DockerImageName::new);
     }

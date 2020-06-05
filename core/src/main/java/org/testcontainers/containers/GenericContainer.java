@@ -85,7 +85,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -243,6 +242,7 @@ public class GenericContainer<SELF extends GenericContainer<SELF>>
     @Setter(AccessLevel.NONE)
     private boolean shouldBeReused = false;
 
+    @Deprecated
     public GenericContainer() {
         this(TestcontainersConfiguration.getInstance().getTinyImage());
     }
@@ -251,21 +251,15 @@ public class GenericContainer<SELF extends GenericContainer<SELF>>
         this.image = new RemoteDockerImage(dockerImageName);
     }
 
-    public GenericContainer(CompletableFuture<DockerImageName> futureDockerImageName) {
-        this.image = new RemoteDockerImage(futureDockerImageName);
-    }
-
     @Deprecated
     public GenericContainer(@NonNull final String dockerImageName) {
         this.setDockerImageName(dockerImageName);
     }
 
-    @Deprecated
     public GenericContainer(@NonNull final Future<String> image) {
         setImage(image);
     }
 
-    @Deprecated
     public void setImage(Future<String> image) {
         this.image = new RemoteDockerImage(image);
     }

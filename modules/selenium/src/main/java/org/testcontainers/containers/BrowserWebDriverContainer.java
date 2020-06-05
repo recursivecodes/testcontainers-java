@@ -1,12 +1,10 @@
 package org.testcontainers.containers;
 
+import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.AccessMode;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
 import com.google.common.collect.ImmutableSet;
-
-import com.github.dockerjava.api.command.InspectContainerResponse;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.openqa.selenium.Capabilities;
@@ -26,6 +24,7 @@ import org.testcontainers.containers.wait.WaitAllStrategy;
 import org.testcontainers.containers.wait.WaitStrategy;
 import org.testcontainers.lifecycle.TestDescription;
 import org.testcontainers.lifecycle.TestLifecycleAware;
+import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,6 +72,7 @@ public class BrowserWebDriverContainer<SELF extends BrowserWebDriverContainer<SE
     /**
      */
     public BrowserWebDriverContainer() {
+        super();
         final WaitStrategy logWaitStrategy = new LogMessageWaitStrategy()
                 .withRegEx(".*(RemoteWebDriver instances should connect to|Selenium Server is up and running).*\n")
                 .withStartupTimeout(Duration.of(15, SECONDS));
@@ -89,14 +89,17 @@ public class BrowserWebDriverContainer<SELF extends BrowserWebDriverContainer<SE
      * Constructor taking a specific webdriver container name and tag
      * @param dockerImageName Name of the docker image to pull
      */
+    @Deprecated
     public BrowserWebDriverContainer(String dockerImageName) {
-        this();
-        super.setDockerImageName(dockerImageName);
+        this(DockerImageName.of(dockerImageName));
         this.customImageNameIsSet = true;
         // We have to force SKIP mode for the recording by default because we don't know if the image has VNC or not
         recordingMode = VncRecordingMode.SKIP;
     }
 
+    public BrowserWebDriverContainer(DockerImageName dockerImageName) {
+        super(dockerImageName);
+    }
 
     public SELF withCapabilities(Capabilities capabilities) {
         this.capabilities = capabilities;

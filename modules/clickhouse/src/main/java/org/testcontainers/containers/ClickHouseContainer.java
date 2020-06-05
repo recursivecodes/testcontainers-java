@@ -1,6 +1,7 @@
 package org.testcontainers.containers;
 
 import org.testcontainers.containers.wait.HttpWaitStrategy;
+import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 
@@ -20,11 +21,17 @@ public class ClickHouseContainer extends JdbcDatabaseContainer {
     private String username = "default";
     private String password = "";
 
+    @Deprecated
     public ClickHouseContainer() {
         super(IMAGE + ":" + DEFAULT_TAG);
     }
 
+    @Deprecated
     public ClickHouseContainer(String dockerImageName) {
+        this(DockerImageName.of(dockerImageName));
+    }
+
+    public ClickHouseContainer(final DockerImageName dockerImageName) {
         super(dockerImageName);
 
         withExposedPorts(HTTP_PORT, NATIVE_PORT);

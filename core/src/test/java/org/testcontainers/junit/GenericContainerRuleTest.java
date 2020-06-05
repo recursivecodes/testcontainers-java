@@ -25,6 +25,7 @@ import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.startupcheck.OneShotStartupCheckStrategy;
 import org.testcontainers.utility.Base58;
+import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.TestEnvironment;
 
 import java.io.BufferedReader;
@@ -66,6 +67,11 @@ public class GenericContainerRuleTest {
     private static final int RABBITMQ_PORT = 5672;
     private static final int MONGO_PORT = 27017;
 
+    public static final DockerImageName REDIS_IMAGE = DockerImageName.of("redis:3.0.2");
+    public static final DockerImageName RABBITMQ_IMAGE = DockerImageName.of("rabbitmq:3.5.3");
+    public static final DockerImageName MONGODB_IMAGE = DockerImageName.of("mongo:3.1.5");
+    public static final DockerImageName ALPINE_IMAGE = DockerImageName.of("alpine:3.2");
+
     /*
      * Test data setup
      */
@@ -80,29 +86,27 @@ public class GenericContainerRuleTest {
      * Redis
      */
     @ClassRule
-    public static GenericContainer redis = new GenericContainer(org.testcontainers.utility.DockerImageName.of("redis:3.0.2"))
+    public static GenericContainer<?> redis = new GenericContainer<>(REDIS_IMAGE)
             .withExposedPorts(REDIS_PORT);
 
     /**
      * RabbitMQ
      */
     @ClassRule
-    public static GenericContainer rabbitMq = new GenericContainer(org.testcontainers.utility.DockerImageName.of("rabbitmq:3.5.3"))
+    public static GenericContainer<?> rabbitMq = new GenericContainer<>(RABBITMQ_IMAGE)
             .withExposedPorts(RABBITMQ_PORT);
-
     /**
      * MongoDB
      */
     @ClassRule
-    public static GenericContainer mongo = new GenericContainer(org.testcontainers.utility.DockerImageName.of("mongo:3.1.5"))
+    public static GenericContainer<?> mongo = new GenericContainer<>(MONGODB_IMAGE)
             .withExposedPorts(MONGO_PORT);
-
     /**
      * Pass an environment variable to the container, then run a shell script that exposes the variable in a quick and
      * dirty way for testing.
      */
     @ClassRule
-    public static GenericContainer alpineEnvVar = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
+    public static GenericContainer<?> alpineEnvVar = new GenericContainer<>(ALPINE_IMAGE)
             .withExposedPorts(80)
             .withEnv("MAGIC_NUMBER", "4")
             .withEnv("MAGIC_NUMBER", oldValue -> oldValue.orElse("") + "2")
@@ -113,7 +117,7 @@ public class GenericContainerRuleTest {
      * dirty way for testing.
      */
     @ClassRule
-    public static GenericContainer alpineEnvVarFromMap = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
+    public static GenericContainer<?> alpineEnvVarFromMap = new GenericContainer<>(ALPINE_IMAGE)
             .withExposedPorts(80)
             .withEnv(ImmutableMap.of(
                     "FIRST", "42",
@@ -125,7 +129,7 @@ public class GenericContainerRuleTest {
      * Map a file on the classpath to a file in the container, and then expose the content for testing.
      */
     @ClassRule
-    public static GenericContainer alpineClasspathResource = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
+    public static GenericContainer<?> alpineClasspathResource = new GenericContainer<>(ALPINE_IMAGE)
             .withExposedPorts(80)
             .withClasspathResourceMapping("mappable-resource/test-resource.txt", "/content.txt", READ_ONLY)
             .withCommand("/bin/sh", "-c", "while true; do cat /content.txt | nc -l -p 80; done");
@@ -134,7 +138,7 @@ public class GenericContainerRuleTest {
      * Map a file on the classpath to a file in the container, and then expose the content for testing.
      */
     @ClassRule
-    public static GenericContainer alpineClasspathResourceSelinux = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
+    public static GenericContainer<?> alpineClasspathResourceSelinux = new GenericContainer<>(ALPINE_IMAGE)
             .withExposedPorts(80)
             .withClasspathResourceMapping("mappable-resource/test-resource.txt", "/content.txt", READ_WRITE, SHARED)
             .withCommand("/bin/sh", "-c", "while true; do cat /content.txt | nc -l -p 80; done");
@@ -143,14 +147,14 @@ public class GenericContainerRuleTest {
      * Create a container with an extra host entry and expose the content of /etc/hosts for testing.
      */
     @ClassRule
-    public static GenericContainer alpineExtrahost = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
+    public static GenericContainer<?> alpineExtrahost = new GenericContainer<>(ALPINE_IMAGE)
             .withExposedPorts(80)
             .withExtraHost("somehost", "192.168.1.10")
             .withCommand("/bin/sh", "-c", "while true; do cat /etc/hosts | nc -l -p 80; done");
 
     @Test
     public void testIsRunning() {
-        try (GenericContainer container = new GenericContainer().withCommand("top")) {
+        try (GenericContainer container = new GenericContainer<>().withCommand("top")) {
             assertFalse("Container is not started and not running", container.isRunning());
             container.start();
             assertTrue("Container is started and running", container.isRunning());
@@ -160,7 +164,7 @@ public class GenericContainerRuleTest {
     @Test
     public void withTmpFsTest() throws Exception {
         try (
-            GenericContainer container = new GenericContainer()
+            GenericContainer container = new GenericContainer<>()
                 .withCommand("top")
                 .withTmpFs(singletonMap("/testtmpfs", "rw"))
         ) {
@@ -241,7 +245,7 @@ public class GenericContainerRuleTest {
 
     @Test
     public void customLabelTest() {
-        try (final GenericContainer alpineCustomLabel = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
+        try (final GenericContainer alpineCustomLabel = new GenericContainer<>(ALPINE_IMAGE)
             .withLabel("our.custom", "label")
             .withCommand("top")) {
 
@@ -259,7 +263,7 @@ public class GenericContainerRuleTest {
         assertThrows("When trying to overwrite an 'org.testcontainers' label, withLabel() throws an exception",
             IllegalArgumentException.class,
             () -> {
-                new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
+                new GenericContainer<>(ALPINE_IMAGE)
                     .withLabel("org.testcontainers.foo", "false");
             }
         );
@@ -301,7 +305,7 @@ public class GenericContainerRuleTest {
     public void failFastWhenContainerHaltsImmediately() throws Exception {
 
         long startingTimeMs = System.currentTimeMillis();
-        final GenericContainer failsImmediately = new GenericContainer(org.testcontainers.utility.DockerImageName.of("alpine:3.2"))
+        final GenericContainer failsImmediately = new GenericContainer<>(ALPINE_IMAGE)
               .withCommand("/bin/sh", "-c", "return false")
               .withMinimumRunningDuration(Duration.ofMillis(100));
 
@@ -365,7 +369,7 @@ public class GenericContainerRuleTest {
         // Use random name to avoid the conflicts between the tests
         String randomName = Base58.randomString(5);
         try(
-                GenericContainer container = new GenericContainer(org.testcontainers.utility.DockerImageName.of("redis:3.0.2"))
+                GenericContainer<?> container = new GenericContainer<>(REDIS_IMAGE)
                         .withCommand("redis-server", "--help")
                         .withCreateContainerCmdModifier(cmd -> cmd.withName("overrideMe"))
                         // Preserves the order
@@ -409,7 +413,7 @@ public class GenericContainerRuleTest {
 
     @Test
     public void sharedMemorySetTest() {
-        try (GenericContainer containerWithSharedMemory = new GenericContainer()
+        try (GenericContainer containerWithSharedMemory = new GenericContainer<>()
             .withSharedMemorySize(42L * FileUtils.ONE_MB)
             .withStartupCheckStrategy(new OneShotStartupCheckStrategy())) {
 

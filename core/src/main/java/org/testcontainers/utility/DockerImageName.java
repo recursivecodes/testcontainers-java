@@ -24,6 +24,21 @@ public final class DockerImageName {
     private final String repo;
     private final Versioning versioning;
 
+    /**
+     * Parses a docker image name from a provided string.
+     *
+     * @param fullImageName in standard Docker format, e.g. <code>name:tag</code>,
+     *                      <code>some.registry/path/name:tag</code>,
+     *                      <code>some.registry/path/name@sha256:abcdef...</code>, etc.
+     * @return a parsed representation of the image name
+     */
+    public static DockerImageName of(final String fullImageName) {
+        return new DockerImageName(fullImageName);
+    }
+
+    /**
+     * @deprecated use {@link DockerImageName#of} instead
+     */
     @Deprecated
     public DockerImageName(String name) {
         this.rawName = name;
@@ -53,6 +68,9 @@ public final class DockerImageName {
         }
     }
 
+    /**
+     * @deprecated use {@link DockerImageName#of} instead, optionally in conjunction with {@link DockerImageName#withTag(String)}
+     */
     @Deprecated
     public DockerImageName(String name, String tag) {
         this.rawName = name;
@@ -77,10 +95,6 @@ public final class DockerImageName {
             repo = remoteName;
             versioning = new TagVersioning(tag);
         }
-    }
-
-    public static DockerImageName of(final String fullImageName) {
-        return new DockerImageName(fullImageName);
     }
 
     /**
@@ -139,6 +153,7 @@ public final class DockerImageName {
 
     private interface Versioning {
         boolean isValid();
+
         String getSeparator();
     }
 
@@ -168,7 +183,7 @@ public final class DockerImageName {
     }
 
     @Data
-    private class Sha256Versioning implements Versioning {
+    private static class Sha256Versioning implements Versioning {
         public static final String HASH_REGEX = "[0-9a-fA-F]{32,}";
         private final String hash;
 

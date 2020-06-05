@@ -2,12 +2,12 @@ package org.testcontainers.containers;
 
 import org.jetbrains.annotations.NotNull;
 import org.testcontainers.containers.wait.LogMessageWaitStrategy;
+import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 
-import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
@@ -32,11 +32,17 @@ public class PostgreSQLContainer<SELF extends PostgreSQLContainer<SELF>> extends
 
     private static final String QUERY_PARAM_SEPARATOR = "&";
 
+    @Deprecated
     public PostgreSQLContainer() {
         this(IMAGE + ":" + DEFAULT_TAG);
     }
 
+    @Deprecated
     public PostgreSQLContainer(final String dockerImageName) {
+        this(DockerImageName.of(dockerImageName));
+    }
+
+    public PostgreSQLContainer(final DockerImageName dockerImageName) {
         super(dockerImageName);
         this.waitStrategy = new LogMessageWaitStrategy()
                 .withRegEx(".*database system is ready to accept connections.*\\s")
